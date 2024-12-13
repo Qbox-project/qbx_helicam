@@ -287,19 +287,21 @@ local spotlight = lib.addKeybind({
 })
 
 ---@diagnostic disable-next-line: param-type-mismatch
-AddStateBagChangeHandler('spotlight', nil, function(bagName, key, value)
+AddStateBagChangeHandler('spotlight', nil, function(bagName, _, value)
     local entity = GetEntityFromStateBagName(bagName)
 
     SetVehicleSearchlight(entity, value, false)
 end)
 
-lib.onCache('vehicle', function(vehicle)
-    local model = GetEntityModel(vehicle)
+lib.onCache('seat', function(seat)
+    if not cache.vehicle then return end
 
-    if not config.policeHelicopters[model] or (cache.seat ~= -1 and cache.seat ~= 0) then return end
+    local model = GetEntityModel(cache.vehicle)
 
-    if DoesVehicleHaveSearchlight(vehicle) then
-        spotlight:disable(not vehicle)
+    if not config.policeHelicopters[model] or (seat ~= -1 and seat ~= 0) then return end
+
+    if DoesVehicleHaveSearchlight(cache.vehicle) then
+        spotlight:disable(not cache.vehicle)
     end
 
     CreateThread(function()
