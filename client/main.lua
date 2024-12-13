@@ -276,7 +276,7 @@ local spotlight = lib.addKeybind({
     name = 'helicam',
     description = 'Toggle Helicopter Spotlight',
     defaultKey = '7',
-    dsiabled = true,
+    disabled = true,
     onPressed = function()
         PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
 
