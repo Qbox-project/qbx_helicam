@@ -1,3 +1,5 @@
 return {
-    policeHelicopter = 'polmav',
+    policeHelicopters = {
+        `polmav`,
+    },
 }

@@ -27,7 +27,6 @@ files {
     'html/script.js',
     'html/main.css',
     'config/client.lua',
-    'locales/*.json',
 }
 
 lua54 'yes'

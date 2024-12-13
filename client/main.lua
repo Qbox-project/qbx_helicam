@@ -7,9 +7,7 @@ local UD_SPEED = 3.0 -- speed by which the camera pans up-down
 local toggleHeliCam = 51 -- control id of the button by which to toggle the heliCam mode. Default: INPUT_CONTEXT (E)
 local toggleVision = 25 -- control id to toggle vision mode. Default: INPUT_AIM (Right mouse btn)
 local toggleRappel = 154 -- control id to rappel out of the heli. Default: INPUT_DUCK (X)
-local toggleSpotlight = 74 -- control id to toggle the front spotlight Default: INPUT_VEH_HEADLIGHT (H)
 local toggleLockOn = 22 -- control id to lock onto a vehicle with the camera. Default is INPUT_SPRINT (spacebar)
-local spotlightState = false
 local heliCam = false
 local fov = (FOV_MAX + FOV_MIN) * 0.5
 
@@ -33,10 +31,6 @@ local VEHICLE_LOCK_STATE = {
 local vehicleLockState = VEHICLE_LOCK_STATE.dormant
 local vehicleDetected = nil
 local lockedOnVehicle = nil
-
-local function isPlayerInPoliceHeli()
-    return GetEntityModel(cache.vehicle) == joaat(config.policeHelicopter)
-end
 
 local function isHeliHighEnough(heli)
     return GetEntityHeightAboveGround(heli) > 1.5
@@ -132,10 +126,6 @@ local function renderVehicleInfo(vehicle)
     })
 end
 
-RegisterNetEvent('qbx_helicam:client:toggledSpotlight', function(serverId, state)
-    SetVehicleSearchlight(GetVehiclePedIsIn(GetPlayerPed(GetPlayerFromServerId(serverId)), false), state, false)
-end)
-
 local function heliCamThread()
     CreateThread(function()
         local sleep
@@ -220,12 +210,6 @@ local function handleInVehicle()
         end
     end
 
-    if IsControlJustPressed(0, toggleSpotlight) and (cache.seat == -1 or cache.seat == 0) then
-        spotlightState = not spotlightState
-        TriggerServerEvent('qbx_helicam:server:toggleSpotlight', spotlightState)
-        PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
-    end
-
     if heliCam then
         SetTimecycleModifier('heliGunCam')
         SetTimecycleModifierStrength(0.3)
@@ -288,11 +272,40 @@ local function handleInVehicle()
     end
 end
 
-AddEventHandler('ox_lib:cache:vehicle', function()
+local spotlight = lib.addKeybind({
+    name = 'helicam',
+    description = 'Toggle Helicopter Spotlight',
+    defaultKey = '7',
+    dsiabled = true,
+    onPressed = function()
+        PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
+
+        local netId = NetworkGetNetworkIdFromEntity(cache.vehicle)
+
+        TriggerServerEvent('qbx_helicam:server:toggleSpotlightState', netId)
+    end,
+})
+
+---@diagnostic disable-next-line: param-type-mismatch
+AddStateBagChangeHandler('spotlight', nil, function(bagName, key, value)
+    local entity = GetEntityFromStateBagName(bagName)
+
+    SetVehicleSearchlight(entity, value, false)
+end)
+
+lib.onCache('vehicle', function(vehicle)
+    local model = GetEntityModel(vehicle)
+
+    if not config.policeHelicopters[model] or (cache.seat ~= -1 and cache.seat ~= 0) then return end
+
+    if DoesVehicleHaveSearchlight(vehicle) then
+        spotlight:disable(not vehicle)
+    end
+
     CreateThread(function()
-        if not isPlayerInPoliceHeli() then return end
         while cache.vehicle do
             handleInVehicle()
+
             Wait(0)
         end
     end)
