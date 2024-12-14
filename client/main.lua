@@ -294,14 +294,17 @@ AddStateBagChangeHandler('spotlight', nil, function(bagName, _, value)
 end)
 
 lib.onCache('seat', function(seat)
-    if not cache.vehicle then return end
+    if seat ~= -1 and seat ~= 0 then
+        spotlight:disable(true)
+        return
+    end
 
     local model = GetEntityModel(cache.vehicle)
 
-    if not config.policeHelicopters[model] or (seat ~= -1 and seat ~= 0) then return end
+    if not config.policeHelicopters[model] then return end
 
     if DoesVehicleHaveSearchlight(cache.vehicle) then
-        spotlight:disable(not cache.vehicle)
+        spotlight:disable(false)
     end
 
     CreateThread(function()
