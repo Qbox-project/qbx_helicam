@@ -1,5 +1,5 @@
 return {
-    policeHelicopters = {
-        `polmav`,
+    authorizedHelicopters = {
+        [`polmav`] = true,
     },
 }

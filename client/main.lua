@@ -6,7 +6,6 @@ local LR_SPEED = 3.0 -- speed by which the camera pans left-right
 local UD_SPEED = 3.0 -- speed by which the camera pans up-down
 local toggleHeliCam = 51 -- control id of the button by which to toggle the heliCam mode. Default: INPUT_CONTEXT (E)
 local toggleVision = 25 -- control id to toggle vision mode. Default: INPUT_AIM (Right mouse btn)
-local toggleRappel = 154 -- control id to rappel out of the heli. Default: INPUT_DUCK (X)
 local toggleLockOn = 22 -- control id to lock onto a vehicle with the camera. Default is INPUT_SPRINT (spacebar)
 local heliCam = false
 local fov = (FOV_MAX + FOV_MIN) * 0.5
@@ -203,11 +202,6 @@ local function handleInVehicle()
                 type = 'heliopen',
             })
         end
-
-        if IsControlJustPressed(0, toggleRappel) and (cache.seat == 1 or cache.seat == 2) then -- Initiate rappel
-            PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
-            TaskRappelFromHeli(cache.ped, 1)
-        end
     end
 
     if heliCam then
@@ -273,9 +267,9 @@ local function handleInVehicle()
 end
 
 local spotlight = lib.addKeybind({
-    name = 'helicam',
-    description = 'Toggle Helicopter Spotlight',
-    defaultKey = '7',
+    name = 'spotlight',
+    description = locale('spotlight_keybind'),
+    defaultKey = 'H',
     disabled = true,
     onPressed = function()
         PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
@@ -286,6 +280,17 @@ local spotlight = lib.addKeybind({
     end,
 })
 
+local rappel = lib.addKeybind({
+    name = 'rappel',
+    description = locale('rappel_keybind'),
+    defaultKey = 'X',
+    disabled = true,
+    onPressed = function()
+        PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
+        TaskRappelFromHeli(cache.ped, 1)
+    end
+})
+
 ---@diagnostic disable-next-line: param-type-mismatch
 AddStateBagChangeHandler('spotlight', nil, function(bagName, _, value)
     local entity = GetEntityFromStateBagName(bagName)
@@ -294,17 +299,22 @@ AddStateBagChangeHandler('spotlight', nil, function(bagName, _, value)
 end)
 
 lib.onCache('seat', function(seat)
-    if seat ~= -1 and seat ~= 0 then
-        spotlight:disable(true)
-        return
-    end
-
     local model = GetEntityModel(cache.vehicle)
 
-    if not config.policeHelicopters[model] then return end
+    if not config.authorizedHelicopters[model] then return end
 
-    if DoesVehicleHaveSearchlight(cache.vehicle) then
-        spotlight:disable(false)
+    if seat == -1 and seat == 0 then
+        rappel:disable(true)
+
+        if DoesVehicleHaveSearchlight(cache.vehicle) then
+            spotlight:disable(false)
+        end
+    elseif seat == 1 and seat == 2 then
+        spotlight:disable(true)
+
+        if DoesVehicleAllowRappel(cache.vehicle) then
+            rappel:disable(false)
+        end
     end
 
     CreateThread(function()
