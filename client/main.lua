@@ -303,13 +303,13 @@ lib.onCache('seat', function(seat)
 
     if not config.authorizedHelicopters[model] then return end
 
-    if seat == -1 and seat == 0 then
+    if seat == -1 or seat == 0 then
         rappel:disable(true)
 
         if DoesVehicleHaveSearchlight(cache.vehicle) then
             spotlight:disable(false)
         end
-    elseif seat == 1 and seat == 2 then
+    elseif seat == 1 or seat == 2 then
         spotlight:disable(true)
 
         if DoesVehicleAllowRappel(cache.vehicle) then
