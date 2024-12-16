@@ -192,17 +192,6 @@ end
 
 local function handleInVehicle()
     if not LocalPlayer.state.isLoggedIn then return end
-    if QBX.PlayerData.job.type ~= 'leo' and not QBX.PlayerData.job.onduty then return end
-    if isHeliHighEnough(cache.vehicle) then
-        if IsControlJustPressed(0, toggleHeliCam) then -- Toggle Helicam
-            PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
-            heliCam = true
-            heliCamThread()
-            SendNUIMessage({
-                type = 'heliopen',
-            })
-        end
-    end
 
     if heliCam then
         SetTimecycleModifier('heliGunCam')
@@ -266,6 +255,23 @@ local function handleInVehicle()
     end
 end
 
+local camera = lib.addKeybind({
+    name = 'camera',
+    description = locale('camera_keybind'),
+    defaultKey = 'E',
+    disabled = true,
+    onPressed = function()
+        if not isHeliHighEnough(cache.vehicle) then return end
+
+        PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', false)
+        heliCam = true
+        heliCamThread()
+        SendNUIMessage({
+            type = 'heliopen',
+        })
+    end
+})
+
 local spotlight = lib.addKeybind({
     name = 'spotlight',
     description = locale('spotlight_keybind'),
@@ -299,6 +305,13 @@ AddStateBagChangeHandler('spotlight', nil, function(bagName, _, value)
 end)
 
 lib.onCache('seat', function(seat)
+    if not seat then
+        camera:disable(true)
+        spotlight:disable(true)
+        rappel:disable(true)
+        return
+    end
+
     local model = GetEntityModel(cache.vehicle)
 
     if not config.authorizedHelicopters[model] then return end
@@ -309,7 +322,10 @@ lib.onCache('seat', function(seat)
         if DoesVehicleHaveSearchlight(cache.vehicle) then
             spotlight:disable(false)
         end
+
+        camera:disable(false)
     elseif seat >= 1 then
+        camera:disable(true)
         spotlight:disable(true)
 
         if DoesVehicleAllowRappel(cache.vehicle) then

@@ -1,4 +1,5 @@
 {
+  "camera_keybind": "Toggle helicopter camera",
   "spotlight_keybind": "Toggle helicopter spotlight",
   "rappel_keybind": "Start rappeling"
 }
