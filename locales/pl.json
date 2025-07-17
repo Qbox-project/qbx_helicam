@@ -1,5 +1,5 @@
 {
-  "camera_keybind": "[E] Kamera",
-  "spotlight_keybind": "[L] Szperacz", 
-  "rappel_keybind": "[H] Zjazd na linie"
+  "camera_keybind": "Przełącz kamere helikoptera",
+  "spotlight_keybind": "Przełącz szperacz helikoptera",
+  "rappel_keybind": "Rozpocznij zjazd na linie"
 }
